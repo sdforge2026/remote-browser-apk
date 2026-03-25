@@ -3,8 +3,10 @@ package com.remote.desktopclient
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Message
 import android.preference.PreferenceManager
 import android.view.View
+import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -50,12 +52,37 @@ class MainActivity : AppCompatActivity() {
         s.userAgentString = ua
         s.useWideViewPort = true
         s.loadWithOverviewMode = true
+        s.javaScriptCanOpenWindowsAutomatically = true
+        s.setSupportMultipleWindows(true)
         s.setSupportZoom(true)
         s.builtInZoomControls = true
         s.displayZoomControls = false
         s.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        wv.webChromeClient = object : WebChromeClient() {}
-        val jsSpoof = "Object.defineProperty(navigator,'userAgent',{get:function(){return '$ua'}});Object.defineProperty(navigator,'platform',{get:function(){return 'Win32'}});Object.defineProperty(navigator,'maxTouchPoints',{get:function(){return 0}});Object.defineProperty(navigator,'webdriver',{get:function(){return false}});"
+        CookieManager.getInstance().setAcceptThirdPartyCookies(wv, true)
+        wv.webChromeClient = object : WebChromeClient() {
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: Message?
+            ): Boolean {
+                val newWebView = WebView(this@MainActivity)
+                newWebView.settings.javaScriptEnabled = true
+                newWebView.webViewClient = object : WebViewClient() {
+                    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                        if (!url.isNullOrEmpty()) {
+                            wv.loadUrl(url)
+                        }
+                        newWebView.destroy()
+                    }
+                }
+                val transport = resultMsg?.obj as WebView.WebViewTransport
+                transport.webView = newWebView
+                resultMsg?.sendToTarget()
+                return true
+            }
+        }
+        val jsSpoof = "Object.defineProperty(navigator,'userAgent',{get:function(){return '$ua'}});Object.defineProperty(navigator,'platform',{get:function(){return 'Win32'}});Object.defineProperty(navigator,'maxTouchPoints',{get:function(){return 0}});Object.defineProperty(navigator,'webdriver',{get:function(){return false}});window.open=function(u){try{location.href=u}catch(e){}};"
         val jsRuffle = "(()=>{var s=document.createElement('script');s.src='https://unpkg.com/@ruffle-rs/ruffle@latest/ruffle.js';s.crossOrigin='anonymous';document.head.appendChild(s);function run(){if(!window.RufflePlayer){setTimeout(run,500);return;}var r=window.RufflePlayer.newest();document.querySelectorAll('embed,object').forEach(function(el){var src=el.getAttribute('src')||el.getAttribute('data')||el.data;if(src&&/\\.swf(\\?|$)/i.test(src)){var p=r.createPlayer();p.style.width=el.getAttribute('width')?el.getAttribute('width')+'px':'100%';p.style.height=el.getAttribute('height')?el.getAttribute('height')+'px':'100%';el.parentNode.insertBefore(p,el);p.load(src);el.remove();}});}document.addEventListener('DOMContentLoaded',run);run();})();"
         wv.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
