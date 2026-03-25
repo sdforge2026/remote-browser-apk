@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         }
-        val jsSpoof = "Object.defineProperty(navigator,'userAgent',{get:function(){return '$ua'}});Object.defineProperty(navigator,'platform',{get:function(){return 'Win32'}});Object.defineProperty(navigator,'maxTouchPoints',{get:function(){return 0}});Object.defineProperty(navigator,'webdriver',{get:function(){return false}});window.open=function(u){try{location.href=u}catch(e){}};"
+        val jsSpoof = "Object.defineProperty(navigator,'userAgent',{get:function(){return '$ua'}});Object.defineProperty(navigator,'platform',{get:function(){return 'Win32'}});Object.defineProperty(navigator,'maxTouchPoints',{get:function(){return 0}});Object.defineProperty(navigator,'webdriver',{get:function(){return false}});"
         val jsRuffle = "(()=>{var s=document.createElement('script');s.src='https://unpkg.com/@ruffle-rs/ruffle@latest/ruffle.js';s.crossOrigin='anonymous';document.head.appendChild(s);function run(){if(!window.RufflePlayer){setTimeout(run,500);return;}var r=window.RufflePlayer.newest();document.querySelectorAll('embed,object').forEach(function(el){var src=el.getAttribute('src')||el.getAttribute('data')||el.data;if(src&&/\\.swf(\\?|$)/i.test(src)){var p=r.createPlayer();p.style.width=el.getAttribute('width')?el.getAttribute('width')+'px':'100%';p.style.height=el.getAttribute('height')?el.getAttribute('height')+'px':'100%';el.parentNode.insertBefore(p,el);p.load(src);el.remove();}});}document.addEventListener('DOMContentLoaded',run);run();})();"
         wv.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
